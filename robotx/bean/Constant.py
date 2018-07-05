@@ -1,0 +1,3 @@
+__DATE_DIFF_COL__ = "__$$DATE_DIFF$$__"
+__LIST_APPENDER__ = "_lst"
+__DATE_DIFF_LIST__ = __DATE_DIFF_COL__ + __LIST_APPENDER__

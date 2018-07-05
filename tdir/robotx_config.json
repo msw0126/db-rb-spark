@@ -1,0 +1,50 @@
+{
+    "relation": [
+        {
+            "join": [
+                {
+                    "sc_field": "user_id",
+                    "tg_field": "user_id"
+                }
+            ],
+            "target": "overdue",
+            "source": "user_info",
+            "type": "FORWARD"
+        }
+    ],
+    "data": {
+        "overdue": {
+            "table": "taoshu_db_input.overdue"
+        },
+        "user_info": {
+            "table": "taoshu_db_input.user_info"
+        }
+    },
+    "describe": {
+        "overdue": {
+            "numeric": [
+                "user_id",
+                "target"
+            ],
+            "date": [
+                {
+                    "name": "date",
+                    "format": "yyyy-MM-dd"
+                }
+            ],
+            "factor": []
+        },
+        "user_info": {
+            "numeric": [
+                "user_id",
+                "job",
+                "sex",
+                "marriage",
+                "household",
+                "education"
+            ],
+            "date": [],
+            "factor": []
+        }
+    }
+}

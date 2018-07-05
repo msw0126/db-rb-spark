@@ -1,0 +1,9 @@
+variable,type
+"target",numeric
+"user_id",numeric
+"$user_info[household]",numeric
+"$user_info[education]",numeric
+"$user_info[job]",numeric
+"$user_info[marriage]",numeric
+"$user_info[sex]",numeric
+"date",date
