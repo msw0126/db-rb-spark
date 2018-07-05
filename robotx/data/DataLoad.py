@@ -35,9 +35,12 @@ class CsvLoader(DataLoader):
         super(CsvLoader, self).__init__(table)
 
     def load(self, spark):
+        # self.table:  <robotx.bean.Beans.Table object at 0x7f204049bf90>
         table = self.table
         if table.data is not None:
             return
+        # table.hive_table_path:  taoshu_db_input.user_info 最外层是for循环，读取两个表的信息
+        # table.hive_table_path:  taoshu_db_input.overdue
         if table.hive_table_path is not None:
             # 读取hive
             sel_lst = list()

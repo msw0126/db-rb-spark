@@ -15,6 +15,14 @@ sys.setdefaultencoding('utf8')
 
 
 class RobotX(object):
+    """
+    debug:
+    config_path: robotx_config.json
+    output_path: taoshu_db_output.rbx_104_RobotXSpark4
+    output_type: hive
+    output_dict: hdfs://node1:8020/taoshu/engine/work_dir/104/RobotXSpark4/dict.csv
+    dict_only: n
+    """
     def __init__(self, config_path, output_path, output_type, output_dict, app_name, dict_only=False):
         self.config_path = Util.unix_abs_path(config_path)
         self.dict_only = dict_only
@@ -68,6 +76,7 @@ class RobotX(object):
 
     def export_data(self):
         data = self.config_parser.target.data
+        # data.show()
         if self.output_type == 'hdfs':
             data.write.csv(self.output_path, header=True, mode='overwrite')
         elif self.output_type == 'hive':
@@ -95,8 +104,14 @@ class RobotX(object):
             spark = SparkSession \
                 .builder \
                 .getOrCreate()
+        # executions:  [<robotx.bean.Beans.Relation object at 0x7f80717c3f90>]
         executions = self.config_parser.execution_sequence
         for relation in executions:
+            """
+            relation:  <robotx.bean.Beans.Relation object at 0x7f80717c3f90>
+            self.dict_only:  False
+            self.config_parser:  <robotx.bean.ConfigParser.ConfigParser object at 0x7f8076b1d5d0>
+            """
             feature_process(relation, spark, self.dict_only, self.config_parser)
         # export dictionary and data
         # # self.export_dict()

@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import csv
 
 from robotx.bean.Beans import *
@@ -44,9 +45,11 @@ class ConfigParser(object):
             config_json = json.load(f)
 
         # use OrderedDict to confirm a reproducible result
+        # OrderedDict, 对获取到的字典，进行排序
         data = OrderedDict(config_json["data"])
         describe = OrderedDict(config_json["describe"])
         relation = config_json["relation"]
+        # 对配置文件中是否含有"limitation"进行处理。此时不包含
         self.parse_limitatiion(config_json)
 
         # todo need more discussion
@@ -82,12 +85,14 @@ class ConfigParser(object):
 
         for table_name, value in describe.items():
             numeric = value['numeric'] if 'numeric' in value else list()  # list of str
-            factor = value[
-                'factor'] if 'factor' in value else list()  # list of dict, in some case, level doesn't exist.
+            factor = value['factor'] if 'factor' in value else list()  # list of dict, in some case, level doesn't exist.
             date = value['date'] if 'date' in value else list()  # list of dict
+            # self.table_mapping: OrderedDict([(u'user_info', <robotx.bean.Beans.Table object at 0x7f81d8c95a10>), (u'overdue', <robotx.bean.Beans.Table object at 0x7f81d8c95c90>)])
+            # 是从配置文件中的data中拿到的表名
             if table_name not in self.table_mapping:
                 raise Exception("Error:[%s] not found in data" % table_name)
 
+            # table: <robotx.bean.Beans.Table object at 0x7f98cb14aa10>
             table = self.table_mapping[table_name]
             for numeric_ in numeric:
                 table + NumericField(numeric_, table_name)
@@ -121,22 +126,39 @@ class ConfigParser(object):
             if source not in self.table_mapping:
                 raise Exception("Error:[%s] not found in data" % source)
 
+            # target指：target = relation_['target']
             target = self.table_mapping[target]
+            # source： source = relation_['source']
             source = self.table_mapping[source]
+            # 得到目标字段和原始字段
             join_fields = [(target[join['tg_field']], source[join['sc_field']]) for join in join_fields]
+            # relation:  <robotx.bean.Beans.Relation object at 0x7fa4e56e7cd0>
             relation = Relation(target, source, relation_type, join_fields, interval)
+            # self.relation_list: [<robotx.bean.Beans.Relation object at 0x7fa33b2b7cd0>]
             self.relation_list.append(relation)
         self.execution_path()
         # entity is not used for the moment
+        # target
 
     def execution_path(self):
+        """
+        self.execution_sequence:  [<robotx.bean.Beans.Relation object at 0x7f5ca5359fd0>]
+        self.target:  <robotx.bean.Beans.Table object at 0x7f5ca5365090>
+        """
         self.execution_sequence, self.target = DAG.getSortedRelationList(self.relation_list)
         # self.target is the (eventual) target table in relationList
+        # self.target.name:  overdue
         target_name = self.target.name
         for relation in self.relation_list:
+            """
+            relation.target_table.name:  overdue
+            target_name:  overdue
+            relation.join_targets:  [u'user_id']
+            """
             if relation.target_table.name == target_name:
                 for field in relation.join_targets:
                     self.target_keys.add(field)
+        # self.target_keys:  set([u'user_id'])
 
     def parse_limitatiion(self, config_json):
         if "limitation" not in config_json:

@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from robotx.data.DataLoad import *
 from robotx.function.EntityFeatureMethod import *
 from robotx.function.RelationalFeatureMethod import *
@@ -264,13 +265,15 @@ def feature_process(relation, spark, dict_only, config_parser):
     t1 = datetime.datetime.now()
     source = relation.source_table
     target = relation.target_table
+    print "\n============ %s join %s ============" % (source.name, target.name)
     print source.name, "-->", target.name, "..."
 
+    # 重新读取表格，并为每个字段重新改变字段类型
     CsvLoader(source).load(spark)
     field_exp = list("*")
     # todo entity method defined by calculator in web page
     data = source.data
-
+    # data.show()
     if not relation.forward:
         # if entity feature do not do one hot and relational feature
         # todo in multi level relation, may have problem, A--entity->B---rfeat--->C    the factor A will never get onehoted or pivoted

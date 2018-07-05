@@ -25,6 +25,10 @@ def getPath(G, source=None):
 
 def generateReversedGraph(relationList):
     G = nx.DiGraph()
+    """
+    tail:  overdue
+    head:  user_info
+    """
     for x in relationList:
         tail = x.target_table.name
         head = x.source_table.name
@@ -43,6 +47,10 @@ def getIndex(srcName, tgName, relationList):
 def getTable(tableName, relationList):
     # retrieve the target table from relation in relationList
     # of which the name is equal to tableName
+    """
+    relationList:  [<robotx.bean.Beans.Relation object at 0x7ff9da5a4fd0>]
+    tgTableName:  overdue
+    """
     for x in relationList:
         tgTableName = x.target_table.name
         if(tableName == tgTableName):
@@ -56,11 +64,13 @@ def getSortedRelationList(relationList, source=None):
     # arg source is not used, maybe it will be used in future
     relationList = copy.deepcopy(relationList)
     G = generateReversedGraph(relationList)
+    # head:  overdue
     head = findGraphHead(G)
+    # tgTable: <robotx.bean.Beans.Table object at 0x7ff9da5a6090>
     tgTable = getTable(head, relationList)     # tgTable: Table, target table in relationList
+    # pathRl: [(u'user_info', u'overdue')]
     pathRl = getPath(G, source=head)
     resList = []
-
     if(len(pathRl) != len(relationList)):
         raise Exception("The length of path is not equal to the length of relationList.")
     for n in range(len(pathRl)):
@@ -75,6 +85,10 @@ def findGraphHead(G):
     # G is a directed graph
     # return the node which has no parent
     # raise exception if there is zero or more than one node that has no parent
+    """
+    nodes:  [u'user_info', u'overdue']
+    G.edges_iter():  <generator object edges_iter at 0x7f0c5eac5f50>
+    """
     nodes = G.nodes()
     for x in G.edges_iter():
         tail = x[0]
