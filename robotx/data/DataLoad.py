@@ -59,6 +59,10 @@ class CsvLoader(DataLoader):
                 else:
                     sel_lst.append("cast(`{0}` as {1}) as `{0}`".format(field.name, dt_type))
             data = spark.sql("select %s from %s" % (",".join(sel_lst), table.hive_table_path))
+            # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+            # print "spark.sql\(\"select %s from %s\" % \(\",\".join(sel_lst), table.hive_table_path\)\)",  "select %s from %s" % (",".join(sel_lst), table.hive_table_path)
+            # print "data.show()", data.show()
+            # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
             table.data = data
         else:
             if table.path.startswith("hdfs"):

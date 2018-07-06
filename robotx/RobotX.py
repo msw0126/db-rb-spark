@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 import datetime
 import os
 import pickle
@@ -76,12 +77,12 @@ class RobotX(object):
 
     def export_data(self):
         data = self.config_parser.target.data
-        # data.show()
         if self.output_type == 'hdfs':
             data.write.csv(self.output_path, header=True, mode='overwrite')
         elif self.output_type == 'hive':
             print "write hive table %s" %self.output_path
             print "partition keys %s"  %str(self.config_parser.target_keys)
+            # tuple(self.config_parser.target_keys):  (u'user_id',) 可以根据多个字段进行partition
             data.write.mode("overwrite").partitionBy(*tuple(self.config_parser.target_keys))\
                 .saveAsTable(self.output_path)
 
@@ -112,11 +113,18 @@ class RobotX(object):
             self.dict_only:  False
             self.config_parser:  <robotx.bean.ConfigParser.ConfigParser object at 0x7f8076b1d5d0>
             """
+
+            """
+            relation.target_table.name:  overdue
+            relation.source_table.name:  user_info
+            """
+            # 对数据进行join等，相关操作
             feature_process(relation, spark, self.dict_only, self.config_parser)
         # export dictionary and data
         # # self.export_dict()
         # from pyspark import SQLContext, SparkConf, SparkContext, SparkFiles
         self.export_dict(spark)
+        # 保存join以后的数据进hive表
         if not self.dict_only:
             self.export_data()
             # self.agent_update()

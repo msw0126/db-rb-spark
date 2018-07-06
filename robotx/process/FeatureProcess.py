@@ -21,7 +21,9 @@ def __join_table__(source, target, relation, spark, dict_only):
             # tag it
             new_field.joined()
             target + new_field
-
+    # field_exp: ['`user_id` as `$user_info[user_id]`', '`job` as `$user_info[job]`', '`sex` as `$user_info[sex]`', '`marriage` as `$user_info[marriage]`', '`household` as `$user_info[household]`', '`education` as `$user_info[education]`']
+    # selectExpr：可以对指定字段进行特殊处理
+    # 对表source_data进行字段名称的处理
     source_data = source_data.selectExpr(*tuple(field_exp))
     if not dict_only:
         source_data.persist()
@@ -32,14 +34,25 @@ def __join_table__(source, target, relation, spark, dict_only):
         source_field_name = "${0}[{1}]".format(source.name, join_source.name)
         join_source_fields.append(source_field_name)
         join_cond.append(target.data[join_target.name] == source_data[source_field_name])
+    # join_cond:  [Column<(user_id = $user_info[user_id])>]
+    # target与source进行join操作，指定target字段名
     target.data = target.data.join(source_data, join_cond, how="left")
+    # join_source_fields:  ['$user_info[user_id]']
+    # 将多余的字段删除
     target.data = target.data.drop(*tuple(join_source_fields))
 
 
 def __entity_feature__(source, target, relation, spark, dict_only, config_parser):
+
+    # 改变字段类型
     CsvLoader(source).load(spark)
 
     ori_numeric = [numeric for numeric in source.numeric_ori if numeric not in relation]
+
+    """
+    ori_numeric:  [<robotx.bean.Beans.NumericField object at 0x7fb4f9977090>, <robotx.bean.Beans.NumericField object at 0x7fb4f99770d0>, <robotx.bean.Beans.NumericField object at 0x7fb4f9977110>, <robotx.bean.Beans.NumericField object at 0x7fb4f9977150>, <robotx.bean.Beans.NumericField object at 0x7fb4f9977190>]
+    config_parser.CROSS:  False
+    """
 
     # cross between numeric
     if config_parser.CROSS:
@@ -54,6 +67,7 @@ def __entity_feature__(source, target, relation, spark, dict_only, config_parser
                 field_exp.append(Divide(source, numeric1, numeric0).execute())
         # persist
         source.data = source.data.selectExpr(*tuple(field_exp))
+    # 进行两张表的join操作
     __join_table__(source, target, relation, spark, dict_only)
 
 
@@ -268,17 +282,25 @@ def feature_process(relation, spark, dict_only, config_parser):
     print "\n============ %s join %s ============" % (source.name, target.name)
     print source.name, "-->", target.name, "..."
 
+    # source.name:  user_info
     # 重新读取表格，并为每个字段重新改变字段类型
     CsvLoader(source).load(spark)
     field_exp = list("*")
     # todo entity method defined by calculator in web page
     data = source.data
+    # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+    # print "source.data.show()", source.data.show()
+    # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
     # data.show()
     if not relation.forward:
         # if entity feature do not do one hot and relational feature
         # todo in multi level relation, may have problem, A--entity->B---rfeat--->C    the factor A will never get onehoted or pivoted
         ori_numeric = [numeric for numeric in source.numeric_ori if numeric not in relation]
         ori_factor = [factor for factor in source.factor_ori if factor not in relation]
+        # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
+        # print "ori_numeric: ", ori_numeric
+        # print "ori_factor: ", ori_factor
+        # print "&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&"
 
         if len(ori_factor) > 0:
             n_rows = data.count()
@@ -297,7 +319,7 @@ def feature_process(relation, spark, dict_only, config_parser):
                     field_exp.extend(Pivot(source, factor, numeric).execute(spark))
             field_exp.extend(OneHot(source, factor).execute(spark))
         source.data = source.data.selectExpr(*tuple(field_exp))
-
+    # 如果含有"FORWARD"字段
     if relation.forward:
         __entity_feature__(source, target, relation, spark, dict_only, config_parser)
     else:
